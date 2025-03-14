@@ -1,0 +1,4 @@
+dependencies:
+  - pip:
+      - fastavro==1.10.0
+      - azure-schemaregistry-avroencoder==1.0.0
