@@ -6,7 +6,7 @@ This repo uses a sample schema mapped to the Catalog Sales and retrieves schema 
 The delta table can be queried using SQL or used for further processing in Microsoft Fabric.
 
 ## Main Features
-- **Structured Streaming**: This repo showcases how to use Spark Structured Streaming to process real-time data streams. Use either the StructuredStreaming notebook or the StreamingSparkJob.py to run the streaming job. 
+- **Structured Streaming**: This repo showcases how to use Spark Structured Streaming to process real-time data streams. Use either the a notebook or using a Spark Job definition to run the streaming job. 
 - **Integration with Azure Event Hub and Schema Registry**: The sample demonstrates how to read data from Azure Event Hub and use the Azure Schema Registry for schema management.This uses Avro schema to read the data from Event Hub and write it to Delta Table.
 - **Secretless Connection**: The notebook uses a secretless connection to Azure Event Hub, ensuring that sensitive information is not exposed in the code.
 - **Batch Processing**: Either Data Pipelines or Spark Job Definitions can be used for batch processing or using the Spark UI for interactive processing.
@@ -42,6 +42,6 @@ The delta table can be queried using SQL or used for further processing in Micro
 7. Update Schema Registry details as needed in the notebook. 
 8. Create a New Data Pipeline and add the notebook to the pipeline.![alt text](image.png) and run the pipeline.
 9. Alternatively, create a new Spark Job Definition and add the StreamingSparkJob.py to the job definition.![alt text](image-3.png) and run the job.
-9. Monitor the pipeline run and check logs and expected output in the target locations. 
-10. You can run the provided TriggerSparkJob.ps1 powershell script to trigger the Spark Job  from the using Microsoft Fabric REST APIs. 
+9. Monitor the run and check logs and expected output in the target locations. 
+10. You can run the provided TriggerSparkJob.ps1 powershell script to trigger the Spark Job using Microsoft Fabric REST APIs. 
 
