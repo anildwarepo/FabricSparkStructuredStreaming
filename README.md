@@ -1,16 +1,16 @@
 ## Running Spark Structured Streaming in Microsoft Fabric
 
-This repository contains a sample notebook that demonstrates how to run Spark Structured Streaming in Microsoft Fabric. The notebook is designed to be used with the Microsoft Fabric platform, which provides a unified analytics experience for data engineering, data science, and business intelligence.
+This repository contains a sample notebook and a sample python script that demonstrates how to run Spark Structured Streaming in Microsoft Fabric. The notebook or the python script is designed to be used with the Microsoft Fabric platform, which provides a unified analytics experience for data engineering, data science, and business intelligence.
 
-The notebook uses a sample schema mapped to the Catalog Sales and retrieves schema from Azure Schema Registry. The notebook reads data from Azure Event Hub and processes it using Spark Structured Streaming. The processed data is then written to a target location as Delta Table in Microsoft Fabric. 
+This repo uses a sample schema mapped to the Catalog Sales and retrieves schema from Azure Schema Registry. The notebook or the script reads data from Azure Event Hub and processes it using Spark Structured Streaming. The processed data is then written to a target location as Delta Table in Microsoft Fabric. 
 The delta table can be queried using SQL or used for further processing in Microsoft Fabric.
 
 ## Main Features
-- **Structured Streaming**: The notebook showcases how to use Spark Structured Streaming to process real-time data streams.
-- **Integration with Azure Event Hub and Schema Registry**: The notebook demonstrates how to read data from Azure Event Hub and use the Azure Schema Registry for schema management.This uses Avro schema to read the data from Event Hub and write it to Delta Table.
+- **Structured Streaming**: This repo showcases how to use Spark Structured Streaming to process real-time data streams. Use either the StructuredStreaming notebook or the StreamingSparkJob.py to run the streaming job. 
+- **Integration with Azure Event Hub and Schema Registry**: The sample demonstrates how to read data from Azure Event Hub and use the Azure Schema Registry for schema management.This uses Avro schema to read the data from Event Hub and write it to Delta Table.
 - **Secretless Connection**: The notebook uses a secretless connection to Azure Event Hub, ensuring that sensitive information is not exposed in the code.
-- **Batch Processing**: The notebook can be submitted using Data Pipelines for batch processing or using the Spark UI for interactive processing.
-- **Token Authentication**: The notebook uses token authentication to connect to Azure Key Vault to retrieve secrets to connect to Azure Event Hub and Azure Schema Registry. It uses Event Hub Connection String and Service Principal to connect to Azure Schema Registry.
+- **Batch Processing**: Either Data Pipelines or Spark Job Definitions can be used for batch processing or using the Spark UI for interactive processing.
+- **Token Authentication**: [notebookutils](https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-utilities) is used for token authentication to connect to Azure Key Vault to retrieve secrets to connect to Azure Event Hub and Azure Schema Registry. It uses Event Hub Connection String and Service Principal to connect to Azure Schema Registry.
 - **Managed Vnet Integration**: The notebooks can connect to Azure Event Hub and Azure Schema Registry using Managed Vnet integration, ensuring secure and private connectivity to Azure services.
 
 
@@ -26,6 +26,12 @@ The delta table can be queried using SQL or used for further processing in Micro
 - **Azure Schema Registry**: The service principal must have the `Schema Registry Contributor` role assigned to it for the Schema Registry instance.
 - **Azure Key Vault**: The service principal must have the `Key Vault Secrets User` role assigned to it for the Key Vault instance.
 
+### Fabric API Permissions
+![alt text](image-1.png)
+
+![alt text](image-2.png)
+
+
 ## Getting Started
 1. Clone this repository to your local machine or open it in Microsoft Fabric.
 2. Create Fabric Spark Environment and upload the PublicLibrary.yml and publish the environment. This will install the required libraries for the notebook to run.
@@ -35,4 +41,7 @@ The delta table can be queried using SQL or used for further processing in Micro
 6. Update any other data flow and processing logic as needed.
 7. Update Schema Registry details as needed in the notebook. 
 8. Create a New Data Pipeline and add the notebook to the pipeline.![alt text](image.png) and run the pipeline.
+9. Alternatively, create a new Spark Job Definition and add the StreamingSparkJob.py to the job definition.![alt text](image-3.png) and run the job.
 9. Monitor the pipeline run and check logs and expected output in the target locations. 
+10. You can run the provided TriggerSparkJob.ps1 powershell script to trigger the Spark Job  from the using Microsoft Fabric REST APIs. 
+
