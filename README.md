@@ -35,7 +35,9 @@ The delta table can be queried using SQL or used for further processing in Micro
 ## Getting Started
 1. Clone this repository to your local machine or open it in Microsoft Fabric.
 2. Create Fabric Spark Environment and upload the PublicLibrary.yml and publish the environment. This will install the required libraries for the notebook to run.
-3. Upload the notebook to your Fabric workspace and attach it the newly created Spark Environment.
+3. Upload the notebook to your Fabric workspace and attach it the newly created Spark Environment.Use the provided PublicLibrary.yml and upload it to the environment. The environment uses the following libraries:
+   - `fastavro==1.10.0` for Avro serialization and deserialization.
+   - `azure-schemaregistry-avroencoder==1.0.0` for Azure Schema Registry client library.
 4. Update the notebook with your Azure Event Hub, Schema Registry, and Key Vault details.
 5. Create Service Principal Secret and Event Hub Connection string and add it to the Key Vault. 
 6. Update any other data flow and processing logic as needed.
