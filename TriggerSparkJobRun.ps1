@@ -26,7 +26,7 @@ $response | ConvertTo-Json
 #Write-Output "----------------------------------------"
 #Write-Output "Running Pipeline...."
 #Write-Output "----------------------------------------"
-#$workspaceId = "b1a1dad3-61f0-4438-be14-1651717fcaf7"
+$workspaceId = "b1a1dad3-61f0-4438-be14-1651717fcaf7"
 #$pipelineId = "7d20bdcc-18ef-4cd2-b292-e2437b8c0fa0" #StructuredStreamingPipeline
 #$pipe_line_url = "https://api.fabric.microsoft.com/v1/workspaces/$workspaceId/items/$pipelineId/jobs/instances?jobType=Pipeline"
 
@@ -42,8 +42,9 @@ $headers = @{
 }
 
 
-
-$spark_job_id = "93d378bf-614e-4eea-a2bb-7eaccb39d67c"
+#$url2 = "https://api.fabric.microsoft.com/v1/workspaces/$workspaceId/sparkJobDefinitions/$spark_job_id"
+$spark_job_id = "81086ab5-2ffd-4aa2-bf73-bae1bd126dd2" #StructureStreamingJob
 $sjd_url = "https://api.fabric.microsoft.com/v1/workspaces/$workspaceId/sparkJobDefinitions/$spark_job_id/jobs/instances?jobType=sparkjob"
+#Write-Output "Spark job URL: $sjd_url"
 $response = Invoke-RestMethod -Uri $sjd_url -Method Post -Headers $headers
 $response | ConvertTo-Json

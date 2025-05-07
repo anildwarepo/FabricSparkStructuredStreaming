@@ -1,0 +1,99 @@
+
+
+
+@accessToken = 
+
+@workspaceId = 
+@lakehouseId = 
+
+
+
+
+
+
+# Create a new folder in the lakehouse
+PUT https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder?resource=directory HTTP/1.1
+Authorization: Bearer {{accessToken}}
+x-ms-version: 2023-11-03
+Content-Length: 0
+
+
+
+# create empty file in the new folder
+PUT https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv?resource=file
+Authorization: Bearer {{accessToken}}
+x-ms-version: 2020-06-12
+Content-Length: 0
+Content-Type: application/octet-stream
+
+
+# append data to the file
+PATCH https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv?action=append&position=0
+Authorization: Bearer {{accessToken}}
+x-ms-version: 2020-06-12
+Content-Type: application/octet-stream
+
+< ./book_Robert_Frost.csv
+
+
+
+# flush the file to commit the data
+PATCH https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv?action=flush&position=629
+Authorization: Bearer {{accessToken}}
+x-ms-version: 2020-06-12
+Content-Length: 0
+Content-Type: application/octet-stream
+
+
+HEAD https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv
+Authorization: Bearer {{accessToken}}
+x-ms-version: 2020-06-12
+
+GET https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv
+Authorization: Bearer {{accessToken}}
+
+
+# Step 1. Acquire the access token
+accessToken=$(az account get-access-token --resource https://storage.azure.com/ --query accessToken -o tsv)
+
+
+# Step 2. Create a new folder in the lakehouse
+curl -X PUT "https://onelake.dfs.fabric.microsoft.com/${workspaceId}/${lakehouseId}/Files/newFolder?resource=directory" \
+  -H "Authorization: Bearer $accessToken" \
+  -H "x-ms-version: 2020-06-12" \
+  -H "Content-Length: 0" 
+  
+
+
+# Step 3. Create empty file in the new folder
+curl -X PUT "https://onelake.dfs.fabric.microsoft.com/${workspaceId}/${lakehouseId}/Files/newFolder/book_Robert_Frost.csv?resource=file" \
+  -H "Authorization: Bearer $accessToken" \
+  -H "x-ms-version: 2020-06-12" \
+  -H "Content-Length: 0" \
+  -H "Content-Type: application/octet-stream"
+
+
+
+# Step 4. Append data to the file
+curl -X PATCH "https://onelake.dfs.fabric.microsoft.com/${workspaceId}/${lakehouseId}/Files/newFolder/book_Robert_Frost.csv?action=append&position=0" \
+  -H "Authorization: Bearer $accessToken" \
+  -H "x-ms-version: 2020-06-12" \
+  -H "Content-Type: application/octet-stream" \
+  --upload-file ./book_Robert_Frost.csv
+
+
+# Step 5. Note the size of the file
+ls -l ./book_Robert_Frost.csv
+
+# Step 6. Update position with the size of the file and flush the file to commit the data
+curl -X PATCH "https://onelake.dfs.fabric.microsoft.com/${workspaceId}/${lakehouseId}/Files/newFolder/book_Robert_Frost.csv?action=flush&position=629" \
+  -H "Authorization: Bearer $accessToken" \
+  -H "x-ms-version: 2020-06-12" \
+  -H "Content-Length: 0" \
+  -H "Content-Type: application/octet-stream"
+
+
+# Step 6. Read the file contents
+curl -X GET "https://onelake.dfs.fabric.microsoft.com/${workspaceId}/${lakehouseId}/Files/newFolder/book_Robert_Frost.csv" \
+  -H "Authorization: Bearer $accessToken"
+
