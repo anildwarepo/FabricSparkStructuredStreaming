@@ -1,16 +1,17 @@
 
 
 
-@accessToken = 
+@workspaceId = b1a1dad3-61f0-4438-be14-1651717fcaf7
+@spark_job_id = 07835678-f9a4-44a5-a95d-5a0d8e2db77a
 
-@workspaceId = 
-@lakehouseId = 
+@accessToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSIsImtpZCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSJ9.eyJhdWQiOiJodHRwczovL3N0b3JhZ2UuYXp1cmUuY29tIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvMTUwMzA1YjMtY2M0Yi00NmRkLTk5MTItNDI1Njc4ZGIxNDk4LyIsImlhdCI6MTc0Njc1ODc2MCwibmJmIjoxNzQ2NzU4NzYwLCJleHAiOjE3NDY3NjI4MzcsImFjciI6IjEiLCJhaW8iOiJBWVFBZS84WkFBQUEwSXJ4VnRPRE9kdkF2cXFLRld1alExRE1hNjJnb1kzNndJVm5CNTRCQStXZnlJTHhnYnM4WlFaWmtZZlZpYmtTMWc4VnAwdFhuN2V5a1pyNmJESE9rMHZ0d3AvWk5kVm5EdWhrY00xUGVVRlVIMDdLUjREYTgxcmNndDY5ZDdSMldJQW16YXE3cWV3OFpvWWk2Q01LUktiYlFjaE5VMHRSeHYwdWpOQml6VWc9IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBpZCI6IjA0YjA3Nzk1LThkZGItNDYxYS1iYmVlLTAyZjllMWJmN2I0NiIsImFwcGlkYWNyIjoiMCIsImRldmljZWlkIjoiNWNiMmVmZGEtMjI2ZC00NWY1LWEzMmItODhhYzVhOTk0NzNlIiwiZ3JvdXBzIjpbImNiYjEzZTQxLTJjMWEtNDFhYi1iNWE0LTg5NDMyZWU2MDgzYiIsIjdjYTVlNGUwLTA0NTctNGI5OC04NGQ1LWZmYjZhYmZiMzUxMCJdLCJpZHR5cCI6InVzZXIiLCJpcGFkZHIiOiIxNzQuMTY1LjU1LjIzOSIsIm5hbWUiOiJhbmlsZHdhIiwib2lkIjoiYjQ3YTRlOTUtNzg3ZS00ZjQ5LTgxY2QtN2RlZTM1ODRlODU1IiwicHVpZCI6IjEwMDMyMDA0NjMxRUREMjkiLCJwd2RfdXJsIjoiaHR0cHM6Ly9wb3J0YWwubWljcm9zb2Z0b25saW5lLmNvbS9DaGFuZ2VQYXNzd29yZC5hc3B4IiwicmgiOiIxLkFYRUJzd1VERlV2TTNVYVpFa0pXZU5zVW1JR21CdVRVODZoQ2tMYkNzQ2xKZXZGeEFYaHhBUS4iLCJzY3AiOiJ1c2VyX2ltcGVyc29uYXRpb24iLCJzaWQiOiIwMDMwOGRjOS01NTJkLWRhZGQtNmVhMy1mMGY1NTZjZjI1NWIiLCJzdWIiOiJ6NUVQNjFPTFl5LUlZakR6QzhKUTdzZWRFUGVtVWdBd3UzcFJ0ZkVEN0c0IiwidGlkIjoiMTUwMzA1YjMtY2M0Yi00NmRkLTk5MTItNDI1Njc4ZGIxNDk4IiwidW5pcXVlX25hbWUiOiJhbmlsZHdhQE1uZ0Vudk1DQVAzNDc1NDEub25taWNyb3NvZnQuY29tIiwidXBuIjoiYW5pbGR3YUBNbmdFbnZNQ0FQMzQ3NTQxLm9ubWljcm9zb2Z0LmNvbSIsInV0aSI6Il8xWnZNcXFpNFV5TDJJRE5BVzZ5QVEiLCJ2ZXIiOiIxLjAiLCJ4bXNfaWRyZWwiOiIxNiAxIn0.EOdCiZsmDzGWT0mU94z4iktNyiaiTRtq0vkx5XrDFdBzTeAovYCqUdCU8mxJ5FyJu1MQhEXtZTx7bShR0m42CgVhkEHuYYCsnUu7ZuAi8oEre-fiaIQwcEu0LBVfdHVUU0LwDGNtwB9KXtnFvMvMHzLi3nn5Hp5YU-qHSCb6vkthBF9heS4drk6uj_ST4a5S6634BdsSS3p9yoFj2HA72I3YY8y5sWaXVzwL8NVLdgcuE8mkk6WrRTlMRoH_vqT900VpmDh7mcNN_He6s6zmuSTSizLlCYQG00NvSSemjsEyeeIJ8iydWm4b8v-iBOEzOJv7jm0Jn42gPeW19xbwbQ
+
+@lakehouseId = ab88234c-5134-4115-8ff3-e780d45740bd
+
+#az account get-access-token --resource https://storage.azure.com --query accessToken --output tsv
 
 
-
-
-
-
+@fileName = book_Robert_Frost.csv
 # Create a new folder in the lakehouse
 PUT https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder?resource=directory HTTP/1.1
 Authorization: Bearer {{accessToken}}
@@ -20,7 +21,7 @@ Content-Length: 0
 
 
 # create empty file in the new folder
-PUT https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv?resource=file
+PUT https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/{{fileName}}?resource=file
 Authorization: Bearer {{accessToken}}
 x-ms-version: 2020-06-12
 Content-Length: 0
@@ -28,17 +29,17 @@ Content-Type: application/octet-stream
 
 
 # append data to the file
-PATCH https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv?action=append&position=0
+PATCH https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/{{fileName}}?action=append&position=0
 Authorization: Bearer {{accessToken}}
 x-ms-version: 2020-06-12
 Content-Type: application/octet-stream
 
-< ./book_Robert_Frost.csv
+< ./{{fileName}}
 
 
 
 # flush the file to commit the data
-PATCH https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/newFolder/book_Robert_Frost.csv?action=flush&position=629
+PATCH https://onelake.dfs.fabric.microsoft.com/{{workspaceId}}/{{lakehouseId}}/Files/{{fileName}}?action=flush&position=629
 Authorization: Bearer {{accessToken}}
 x-ms-version: 2020-06-12
 Content-Length: 0

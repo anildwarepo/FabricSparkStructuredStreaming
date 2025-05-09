@@ -1,7 +1,13 @@
 import requests
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, EnvironmentCredential, InteractiveBrowserCredential
 import json
 import base64
+import os
+from dotenv import load_dotenv
+from msal import ConfidentialClientApplication
+import sys
+
+load_dotenv()
 
 def json_to_base64(json_data):
     # Serialize the JSON data to a string
@@ -29,13 +35,27 @@ def base64_to_json(base64_data):
 
 workspaceId = "b1a1dad3-61f0-4438-be14-1651717fcaf7"
 mainExecutableFile = "StreamingSparkJob.py"
-#sjdArtifactId = ""
+defaultLakehouseId = "ab88234c-5134-4115-8ff3-e780d45740bd"
+
+
+def get_fabric_token():
+    # Create a credential object using DefaultAzureCredential or EnvironmentCredential
+
+    # If you EnvironmentCredential, make sure to set the following environment variables:
+    # AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_CLIENT_SECRET are set in your environment
+    # The AZURE_CLIENT_ID should be given contributor access to the Fabric workspace
+
+    credential = EnvironmentCredential() # DefaultAzureCredential()
+
+    # Get the token for the Fabric API
+    fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token
+
+    return fabric_token
+
+fabric_token = get_fabric_token()
+
 
 def create_spark_job_definition(sjdName: str):
-
-
-    credential = DefaultAzureCredential()
-    fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token  # replace this token with the real AAD token
 
     headers = {
         "Authorization": f"Bearer {fabric_token}", 
@@ -60,7 +80,7 @@ def create_spark_job_definition(sjdName: str):
         }
     }
     # Make the POST request with Bearer authentication
-    sjdCreateUrl = f"https://api.fabric.microsoft.com//v1/workspaces/{workspaceId}/items"
+    sjdCreateUrl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/sparkJobDefinitions"
     response = requests.post(sjdCreateUrl, json=payload_data, headers=headers)
 
     if response.status_code == 201:
@@ -74,6 +94,10 @@ def create_spark_job_definition(sjdName: str):
         return None
 
 
+
+
+
+
 def upload_spark_job_definition_file(sjdArtifactId:str):
 
     # three steps are required: create file, append file, flush file
@@ -81,7 +105,6 @@ def upload_spark_job_definition_file(sjdArtifactId:str):
     onelakeEndPoint = f"https://onelake.dfs.fabric.microsoft.com/{workspaceId}/{sjdArtifactId}" # replace the id of workspace and artifact with the right one
      # the name of the main executable file
     mainSubFolder = "Main" # the sub folder name of the main executable file. Don't change this value
-
 
     credential = DefaultAzureCredential()
     onelakeStorageToken = credential.get_token("https://storage.azure.com/.default").token
@@ -141,7 +164,7 @@ def upload_spark_job_definition_file(sjdArtifactId:str):
 def update_sjd(sjdArtifactId:str, sjdName: str):
     mainAbfssPath = f"abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{sjdArtifactId}/Main/{mainExecutableFile}" # the workspaceId and sjdartifactid are the same as previous steps, the mainExecutableFile is the name of the main executable file
     #libsAbfssPath = f"abfss://{workspaceId}@onelake.dfs.fabric.microsoft.com/{sjdartifactid}/Libs/{libsFile}"  # the workspaceId and sjdartifactid are the same as previous steps, the libsFile is the name of the libs file
-    defaultLakehouseId = 'ab88234c-5134-4115-8ff3-e780d45740bd'; # replace this with the real default lakehouse id
+    
 
     updateRequestBodyJson = {
         "executableFile":mainAbfssPath,
@@ -152,7 +175,8 @@ def update_sjd(sjdArtifactId:str, sjdName: str):
         "commandLineArguments":"",
         "additionalLibraryUris": "",#[libsAbfssPath],
         "language":"Python",
-        "environmentArtifactId":None}
+        "environmentArtifactId": "1e8bc771-85ce-496f-8f9a-e253b67b04be"
+        }
 
     # Encode the bytes as a Base64-encoded string
     base64EncodedUpdateSJDPayload = json_to_base64(updateRequestBodyJson)
@@ -162,18 +186,13 @@ def update_sjd(sjdArtifactId:str, sjdName: str):
     #print(base64EncodedUpdateSJDPayload)
 
     # Define the API URL
-    updateSjdUrl = f"https://api.fabric.microsoft.com//v1/workspaces/{workspaceId}/items/{sjdArtifactId}/updateDefinition"
+    updateSjdUrl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/items/{sjdArtifactId}/updateDefinition"
 
     updatePayload = base64EncodedUpdateSJDPayload
     payloadType = "InlineBase64"
     path = "SparkJobDefinitionV1.json"
     format = "SparkJobDefinitionV1"
     Type = "SparkJobDefinition"
-
-
-    credential = DefaultAzureCredential()
-    fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token  # replace this token with the real AAD token
-
     
     headers = {
         "Authorization": f"Bearer {fabric_token}", 
@@ -208,11 +227,7 @@ def update_sjd(sjdArtifactId:str, sjdName: str):
 
 
 def submit_sjd(sjdArtifactId:str):
-    
-    credential = DefaultAzureCredential()
-    fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token  # replace this token with the real AAD token
-
-    sdjurl = f"https://api.fabric.microsoft.com//v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}/jobs/instances?jobType=sparkjob"
+    sdjurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}/jobs/instances?jobType=sparkjob"
     
     headers = {
         "Authorization": f"Bearer {fabric_token}", 
@@ -221,18 +236,15 @@ def submit_sjd(sjdArtifactId:str):
     response = requests.post(sdjurl,headers=headers)
 
     if response.status_code == 202:
+        print(f"response: {response.url}")
         print("Spark job submitted successfully.")
     else:
         print(f"Failed to submit Spark job. Status code: {response.status_code}, Response: {response.text}")
 
 
 def cancel_sjd(sjdArtifactId:str):
-    
-    credential = DefaultAzureCredential()
-    fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token  # replace this token with the real AAD token
-
-    sdjurl = f"https://api.fabric.microsoft.com//v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}"
-    
+    sdjurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}"
+   
     headers = {
         "Authorization": f"Bearer {fabric_token}", 
         "Content-Type": "application/json"  # Set the content type based on your request
@@ -240,28 +252,141 @@ def cancel_sjd(sjdArtifactId:str):
     response = requests.delete(sdjurl,headers=headers)
 
     if response.status_code == 200:
+
         print("Spark job cancelled successfully.")
     else:
         print(f"Failed to cancel Spark job. Status code: {response.status_code}, Response: {response.text}")
 
 
-# Example usage
-## Comm
+
+
+def submit_job(sjdName):
+    
+    sjdArtifactId = create_spark_job_definition(sjdName=sjdName)
+    print(f"SJD Artifact ID: {sjdArtifactId}")
+    upload_spark_job_definition_file(sjdArtifactId)
+    update_sjd(sjdArtifactId, sjdName=sjdName)
+    submit_sjd(sjdArtifactId)
+    return sjdArtifactId
+
+
+
+def get_app_only_token(tenant_id, client_id, client_secret, audience):
+    """
+    Get an app-only access token for a Service Principal using OAuth 2.0 client credentials flow.
+
+    Args:
+        tenant_id (str): The Azure Active Directory tenant ID.
+        client_id (str): The Service Principal's client ID.
+        client_secret (str): The Service Principal's client secret.
+        audience (str): The audience for the token (e.g., resource-specific scope).
+
+    Returns:
+        str: The access token.
+    """
+    try:
+        # Define the authority URL for the tenant
+        authority = f"https://login.microsoftonline.com/{tenant_id}"
+
+        # Create a ConfidentialClientApplication instance
+        app = ConfidentialClientApplication(
+            client_id = client_id,
+            client_credential = client_secret,
+            authority = authority
+        )
+
+        # Acquire a token using the client credentials flow
+        result = app.acquire_token_for_client(scopes = [audience])
+
+        # Check if the token was successfully retrieved
+        if "access_token" in result:
+            return result["access_token"]
+        else:
+            raise Exception("Failed to retrieve token: {result.get('error_description', 'Unknown error')}")
+    except Exception as e:
+        print(f"Error retrieving token: {e}", fil = sys.stderr)
+        sys.exit(1)
+
+
+ 
+
+def get_livy_sessions(sjdArtifactId:str):
+               
+
+    sjdurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}/livySessions"
+    
+    #fabric_token = get_app_only_token(
+    #    tenant_id = os.getenv("AZURE_TENANT_ID"),
+    #    client_id = os.getenv("AZURE_CLIENT_ID"),
+    #    client_secret = os.getenv("AZURE_CLIENT_SECRET"),
+    #    audience = "https://api.fabric.microsoft.com/.default"
+    #)
+    #headers = {"Authorization": "Bearer " + fabric_token}
+    #api_base_url = 'https://api.fabric.microsoft.com/v1/'
+    #livy_base_url = api_base_url + "/workspaces/"+workspaceId+"/lakehouses/"+defaultLakehouseId +"/livyApi/versions/2023-12-01/batches"    
+    
+    #response = requests.get(livy_base_url, headers = headers)
+    credential = InteractiveBrowserCredential()
+    fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token
+    print(f"fabric_token: {fabric_token}")
+    headers = {
+        "Authorization": f"Bearer {fabric_token}", 
+        "Content-Type": "application/json"  # Set the content type based on your request
+    }
+    response = requests.get(sjdurl,headers=headers)
+#
+    if response.status_code == 200:
+        livyId = response.json()['value'][0]['livyId']
+        print(f"livyId: {livyId}")
+        return livyId
+    else:
+        print(f"Failed fetch livy session. Status code: {response.status_code}, Response: {response.text}")
+        return None
+
+
+def cancel_livy_session(livyId:str):
+
+    sjdurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyapi/versions/2023-12-01/sessions/{livyId}"
+
+    fabric_token = get_app_only_token(
+        tenant_id = os.getenv("AZURE_TENANT_ID"),
+        client_id = os.getenv("AZURE_CLIENT_ID"),
+        client_secret = os.getenv("AZURE_CLIENT_SECRET"),
+        audience = "https://api.fabric.microsoft.com/.default"
+    )
+    headers = {"Authorization": "Bearer " + fabric_token}
+    api_base_url = 'https://api.fabric.microsoft.com/v1/'
+    livy_session_url  = api_base_url + "/workspaces/"+workspaceId+"/lakehouses/"+defaultLakehouseId +"/livyApi/versions/2023-12-01/batches/"+livyId
+        
+    headers = {
+        "Authorization": f"Bearer {fabric_token}",
+        "Content-Type": "application/json"  # Set the content type based on your request
+    }
+    response = requests.delete(livy_session_url,headers=headers)
+
+    if response.status_code == 200:
+        print("Livy session cancelled successfully.")
+    else:
+        print(f"Failed to cancel Livy session. Status code: {response.status_code}, Response: {response.text}")
+
+
 
 if __name__ == "__main__":
+    sjdName = "anildwaSJD15"
     
+    #sjdArtifactId = submit_job(sjdName)
     
+    sjdArtifactId = "ca0bad85-52df-419b-bdb9-2d0bbd4a7021"
+    livyId = get_livy_sessions(sjdArtifactId)
+    #livyId = "c4119203-c37f-41e9-a1de-49ca6b55a4d9"
+    #cancel_livy_session(livyId)
+
     ### Create a new Spark Job Definition (SJD) and upload the main executable file to OneLake
-    
-    #sjdArtifactId = create_spark_job_definition(sjdName="anildwaSJD4")
-
-
-    #print(f"SJD Artifact ID: {sjdArtifactId}")
-    
+   
     ### Upload the main executable file to the SJD in OneLake
     #upload_spark_job_definition_file(sjdArtifactId)
 
-    sjdArtifactId = "b71c901b-a63c-4c40-a9fc-4c1bf3a59402"
+    
 
     ### Update the SJD with the main executable file and other parameters
     #update_sjd(sjdArtifactId, sjdName="anildwaSJD4")
@@ -273,4 +398,5 @@ if __name__ == "__main__":
     ### Cancel the SJD and delete the Spark Job Definition artifact 
     ## This will cancel the SJD and delete the Spark Job Definition artifact from OneLake
     ## To submit the SDJ again, you need to create a new SJD and upload the main executable file again
-    cancel_sjd(sjdArtifactId)
+    #sjdArtifactId = "da9ab9c1-5a3b-4d0e-b5d2-ef7b1d1a5370"
+    #cancel_sjd(sjdArtifactId)
