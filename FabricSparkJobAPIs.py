@@ -308,16 +308,14 @@ def get_app_only_token(tenant_id, client_id, client_secret, audience):
         sys.exit(1)
 
 
- 
+livy_token = InteractiveBrowserCredential().get_token("https://api.fabric.microsoft.com/.default").token
 
 def get_livy_sessions(sjdArtifactId:str):
   
     sjdurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}/livySessions"
-    credential = InteractiveBrowserCredential()
-    fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token
-    print(f"fabric_token: {fabric_token}")
+ 
     headers = {
-        "Authorization": f"Bearer {fabric_token}", 
+        "Authorization": f"Bearer {livy_token}", 
         "Content-Type": "application/json"  # Set the content type based on your request
     }
     response = requests.get(sjdurl,headers=headers)
@@ -334,23 +332,12 @@ def get_livy_sessions(sjdArtifactId:str):
 def cancel_livy_session(livyId:str):
 
     sjdurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyapi/versions/2023-12-01/sessions/{livyId}"
-
-    fabric_token = get_app_only_token(
-        tenant_id = os.getenv("AZURE_TENANT_ID"),
-        client_id = os.getenv("AZURE_CLIENT_ID"),
-        client_secret = os.getenv("AZURE_CLIENT_SECRET"),
-        audience = "https://api.fabric.microsoft.com/.default"
-    )
-    headers = {"Authorization": "Bearer " + fabric_token}
-    api_base_url = 'https://api.fabric.microsoft.com/v1/'
-    livy_session_url  = api_base_url + "/workspaces/"+workspaceId+"/lakehouses/"+defaultLakehouseId +"/livyApi/versions/2023-12-01/batches/"+livyId
-        
+    headers = {"Authorization": "Bearer " + livy_token}
     headers = {
         "Authorization": f"Bearer {fabric_token}",
         "Content-Type": "application/json"  # Set the content type based on your request
     }
-    response = requests.delete(livy_session_url,headers=headers)
-
+    response = requests.delete(sjdurl,headers=headers)
     if response.status_code == 200:
         print("Livy session cancelled successfully.")
     else:
@@ -364,9 +351,9 @@ if __name__ == "__main__":
     #sjdArtifactId = submit_job(sjdName)
     
     sjdArtifactId = "ca0bad85-52df-419b-bdb9-2d0bbd4a7021"
-    livyId = get_livy_sessions(sjdArtifactId)
-    #livyId = "c4119203-c37f-41e9-a1de-49ca6b55a4d9"
-    #cancel_livy_session(livyId)
+    #livyId = get_livy_sessions(sjdArtifactId)
+    livyId = "c4119203-c37f-41e9-a1de-49ca6b55a4d9"
+    cancel_livy_session(livyId)
 
     ### Create a new Spark Job Definition (SJD) and upload the main executable file to OneLake
    
