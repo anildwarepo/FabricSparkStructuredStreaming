@@ -311,21 +311,8 @@ def get_app_only_token(tenant_id, client_id, client_secret, audience):
  
 
 def get_livy_sessions(sjdArtifactId:str):
-               
-
+  
     sjdurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}/livySessions"
-    
-    #fabric_token = get_app_only_token(
-    #    tenant_id = os.getenv("AZURE_TENANT_ID"),
-    #    client_id = os.getenv("AZURE_CLIENT_ID"),
-    #    client_secret = os.getenv("AZURE_CLIENT_SECRET"),
-    #    audience = "https://api.fabric.microsoft.com/.default"
-    #)
-    #headers = {"Authorization": "Bearer " + fabric_token}
-    #api_base_url = 'https://api.fabric.microsoft.com/v1/'
-    #livy_base_url = api_base_url + "/workspaces/"+workspaceId+"/lakehouses/"+defaultLakehouseId +"/livyApi/versions/2023-12-01/batches"    
-    
-    #response = requests.get(livy_base_url, headers = headers)
     credential = InteractiveBrowserCredential()
     fabric_token = credential.get_token("https://api.fabric.microsoft.com/.default").token
     print(f"fabric_token: {fabric_token}")
@@ -334,7 +321,7 @@ def get_livy_sessions(sjdArtifactId:str):
         "Content-Type": "application/json"  # Set the content type based on your request
     }
     response = requests.get(sjdurl,headers=headers)
-#
+
     if response.status_code == 200:
         livyId = response.json()['value'][0]['livyId']
         print(f"livyId: {livyId}")
