@@ -36,7 +36,8 @@ def base64_to_json(base64_data):
 workspaceId = "b1a1dad3-61f0-4438-be14-1651717fcaf7"
 mainExecutableFile = "StreamingSparkJob.py"
 defaultLakehouseId = "ab88234c-5134-4115-8ff3-e780d45740bd"
-
+api_base_url = 'https://api.fabric.microsoft.com/v1'
+fabricEnvironmentID =  "1e8bc771-85ce-496f-8f9a-e253b67b04be"
 
 def get_fabric_token():
     # Create a credential object using DefaultAzureCredential or EnvironmentCredential
@@ -175,7 +176,7 @@ def update_sjd(sjdArtifactId:str, sjdName: str):
         "commandLineArguments":"",
         "additionalLibraryUris": "",#[libsAbfssPath],
         "language":"Python",
-        "environmentArtifactId": "1e8bc771-85ce-496f-8f9a-e253b67b04be"
+        "environmentArtifactId": fabricEnvironmentID
         }
 
     # Encode the bytes as a Base64-encoded string
@@ -308,17 +309,86 @@ def get_app_only_token(tenant_id, client_id, client_secret, audience):
         sys.exit(1)
 
 
-livy_token = InteractiveBrowserCredential().get_token("https://api.fabric.microsoft.com/.default").token
 
-def get_livy_sessions(sjdArtifactId:str):
-  
-    sjdurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/sparkJobDefinitions/{sjdArtifactId}/livySessions"
- 
+def get_livy_token():
+    authority = f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}"
+    audience = "https://api.fabric.microsoft.com/.default"  
+
+    # Create a ConfidentialClientApplication instance
+    app = ConfidentialClientApplication(
+        client_id = os.environ["AZURE_CLIENT_ID"],
+        client_credential = os.environ["AZURE_CLIENT_SECRET"],
+        authority = authority
+    )
+
+    # Acquire a token using the client credentials flow
+    result = app.acquire_token_for_client(scopes = [audience])
+    if "access_token" in result:
+        livy_token = result['access_token']
+        return livy_token
+    else:
+        print(result)
+        raise Exception("Failed to retrieve token: {result.get('error_description', 'Unknown error')}")
+
+
+
+def submit_livy_job():
+    print('Submitting a spark job via the livy batch API..') 
+    livy_token = get_livy_token()
+    livy_base_url_batches = f"{api_base_url}/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyApi/versions/2023-12-01/batches/"    
     headers = {
         "Authorization": f"Bearer {livy_token}", 
         "Content-Type": "application/json"  # Set the content type based on your request
     }
-    response = requests.get(sjdurl,headers=headers)
+    payload_data = {
+        "name": "livytestjob2",
+        "file": "abfss://b1a1dad3-61f0-4438-be14-1651717fcaf7@onelake.dfs.fabric.microsoft.com/ab88234c-5134-4115-8ff3-e780d45740bd/Files/StreamingSparkJob.py",
+        "conf": {
+            "spark.targetLakehouse": defaultLakehouseId,
+            "spark.fabric.environmentDetails": json.dumps({
+                "id": fabricEnvironmentID
+            })
+        }
+    }
+
+    get_batch_response = requests.post(livy_base_url_batches, headers = headers, json = payload_data)
+    if get_batch_response.status_code == 202:
+        livy_id = get_batch_response.json()['id']
+        print(f"The Livy batch job submitted successful. Livy ID: {livy_id}")
+    else:
+        print(get_batch_response.json())
+
+
+
+def get_livy_sessions(livyId:str):
+
+    livy_base_url = f"{api_base_url}/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyApi/versions/2023-12-01/batches/"    
+    livy_base_url_session = f"{api_base_url}/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyApi/versions/2023-12-01/sessions/{livy_base_url_sessions}"    
+    livy_base_url_sessions = f"{api_base_url}/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyApi/versions/2023-12-01/sessions/"    
+    livy_base_url_batches = f"{api_base_url}/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyApi/versions/2023-12-01/batches/"    
+
+    authority = f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}"
+    audience = "https://api.fabric.microsoft.com/.default"  
+
+    # Create a ConfidentialClientApplication instance
+    app = ConfidentialClientApplication(
+        client_id = os.environ["AZURE_CLIENT_ID"],
+        client_credential = os.environ["AZURE_CLIENT_SECRET"],
+        authority = authority
+    )
+
+    # Acquire a token using the client credentials flow
+    result = app.acquire_token_for_client(scopes = [audience])
+
+    livy_token = get_livy_token()
+
+
+    headers = {
+        "Authorization": f"Bearer {livy_token}", 
+        "Content-Type": "application/json"  # Set the content type based on your request
+    }
+
+    response = requests.get(livy_base_url_session,headers=headers)
 
     if response.status_code == 200:
         livyId = response.json()['value'][0]['livyId']
@@ -331,6 +401,7 @@ def get_livy_sessions(sjdArtifactId:str):
 
 def cancel_livy_session(livyId:str):
 
+    livy_token = ""
     sjdurl = f"https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/lakehouses/{defaultLakehouseId}/livyapi/versions/2023-12-01/sessions/{livyId}"
     headers = {"Authorization": "Bearer " + livy_token}
     headers = {
@@ -346,31 +417,10 @@ def cancel_livy_session(livyId:str):
 
 
 if __name__ == "__main__":
-    sjdName = "anildwaSJD15"
-    
-    #sjdArtifactId = submit_job(sjdName)
-    
-    sjdArtifactId = "ca0bad85-52df-419b-bdb9-2d0bbd4a7021"
-    #livyId = get_livy_sessions(sjdArtifactId)
-    livyId = "c4119203-c37f-41e9-a1de-49ca6b55a4d9"
-    cancel_livy_session(livyId)
-
-    ### Create a new Spark Job Definition (SJD) and upload the main executable file to OneLake
+    #livy_id = submit_livy_job()
    
-    ### Upload the main executable file to the SJD in OneLake
-    #upload_spark_job_definition_file(sjdArtifactId)
+    #get_livy_sessions(livy_id)
+    livy_id = "e7d52aa6-57df-4207-92ae-d3fc47c08166"
+    cancel_livy_session(livy_id)
 
     
-
-    ### Update the SJD with the main executable file and other parameters
-    #update_sjd(sjdArtifactId, sjdName="anildwaSJD4")
-
-
-    ### Submit the SJD to run the Spark job
-    #submit_sjd(sjdArtifactId)
-
-    ### Cancel the SJD and delete the Spark Job Definition artifact 
-    ## This will cancel the SJD and delete the Spark Job Definition artifact from OneLake
-    ## To submit the SDJ again, you need to create a new SJD and upload the main executable file again
-    #sjdArtifactId = "da9ab9c1-5a3b-4d0e-b5d2-ef7b1d1a5370"
-    #cancel_sjd(sjdArtifactId)
